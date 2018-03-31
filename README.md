@@ -36,8 +36,11 @@ block B1 {
 
 ### How to run
 
-You have to install souffle. Once you've done that, you would do
-something like:
+First, you have to install souffle and have it on your path.
+
+Then, you can run self tests with `cargo test`.
+
+Or, to run manually, you would do something like:
 
 ```
 > cargo run -- tests/carry-nest/test.txt
