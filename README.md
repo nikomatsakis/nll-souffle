@@ -1,4 +1,10 @@
-# Input file format
+This is a wild-and-crazy new formulation of the NLL analysis. It aims
+to accept more programs and be more efficiently implementable. This
+prototype works by accepting very special input files and generating
+"facts" files.  These files can then be interpreted by the datalog
+formulation using [souffle](https://github.com/souffle-lang/souffle).
+
+### Input file format
 
 ```
 // Maybe some comments here

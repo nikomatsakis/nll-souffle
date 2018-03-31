@@ -1,5 +1,5 @@
 [package]
-name = "nll-soufle"
+name = "nll-souffle"
 version = "0.1.0"
 authors = ["Niko Matsakis <niko@alum.mit.edu>"]
 
