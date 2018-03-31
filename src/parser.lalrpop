@@ -30,9 +30,9 @@ Statement: Statement = {
 
 Effect: Effect = {
     "borrow" "(" <borrow:Id> "as" <region:Id> ")" => Effect::Borrow { <> },
-    "live" "(" <region:Id> ")" => Effect::Live { <> },
-    "pre" "(" <a:Id> ":" <b:Id> ")" => Effect::PreOutlives { <> },
-    "post" "(" <a:Id> ":" <b:Id> ")" => Effect::PostOutlives { <> },
+    "liveOnEntry" "(" <region:Id> ")" => Effect::LiveOnEntry { <> },
+    "kill" "(" <borrow:Id> ")" => Effect::Kill { <> },
+    "outlives" "(" <a:Id> ":" <b:Id> ")" => Effect::Outlives { <> },
 };
 
 Id: String = {

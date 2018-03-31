@@ -132,29 +132,25 @@ mod __parse__Input {
         // State 50
         0, 55, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         // State 51
-        0, 0, 56, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 56, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         // State 52
         0, 0, 57, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         // State 53
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 13,
         // State 54
-        0, 0, 0, 0, 0, -14, 0, -14, -14, -14, 0, 0, -14, 0, 0,
+        0, 0, 0, 0, 0, -15, 0, -15, -15, -15, 0, 0, -15, 0, 0,
         // State 55
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 13,
+        0, 0, 0, 0, 0, -14, 0, -14, -14, -14, 0, 0, -14, 0, 0,
         // State 56
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 13,
         // State 57
-        0, 61, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         // State 58
-        0, 62, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 61, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         // State 59
-        0, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        // State 60
         0, 0, 0, 0, 0, -13, 0, -13, -13, -13, 0, 0, -13, 0, 0,
-        // State 61
+        // State 60
         0, 0, 0, 0, 0, -16, 0, -16, -16, -16, 0, 0, -16, 0, 0,
-        // State 62
-        0, 0, 0, 0, 0, -15, 0, -15, -15, -15, 0, 0, -15, 0, 0,
     ];
     const __EOF_ACTION: &'static [i8] = &[
         // State 0
@@ -279,10 +275,6 @@ mod __parse__Input {
         0,
         // State 60
         0,
-        // State 61
-        0,
-        // State 62
-        0,
     ];
     const __GOTO: &'static [i8] = &[
         // State 0
@@ -396,9 +388,9 @@ mod __parse__Input {
         // State 54
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         // State 55
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 59, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         // State 56
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 60, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 59, 0, 0, 0, 0, 0, 0, 0, 0,
         // State 57
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         // State 58
@@ -406,10 +398,6 @@ mod __parse__Input {
         // State 59
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         // State 60
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        // State 61
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        // State 62
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     ];
     fn __expected_tokens(__state: usize) -> Vec<::std::string::String> {
@@ -421,9 +409,9 @@ mod __parse__Input {
             r###""block""###,
             r###""borrow""###,
             r###""goto""###,
-            r###""live""###,
-            r###""post""###,
-            r###""pre""###,
+            r###""kill""###,
+            r###""liveOnEntry""###,
+            r###""outlives""###,
             r###""statement""###,
             r###""{""###,
             r###""}""###,
@@ -750,7 +738,7 @@ mod __parse__Input {
                 (6, __symbol, 7)
             }
             14 => {
-                // Effect = "live", "(", Id, ")" => ActionFn(9);
+                // Effect = "liveOnEntry", "(", Id, ")" => ActionFn(9);
                 let __sym3 = __pop_Variant0(__symbols);
                 let __sym2 = __pop_Variant8(__symbols);
                 let __sym1 = __pop_Variant0(__symbols);
@@ -762,21 +750,19 @@ mod __parse__Input {
                 (4, __symbol, 7)
             }
             15 => {
-                // Effect = "pre", "(", Id, ":", Id, ")" => ActionFn(10);
-                let __sym5 = __pop_Variant0(__symbols);
-                let __sym4 = __pop_Variant8(__symbols);
+                // Effect = "kill", "(", Id, ")" => ActionFn(10);
                 let __sym3 = __pop_Variant0(__symbols);
                 let __sym2 = __pop_Variant8(__symbols);
                 let __sym1 = __pop_Variant0(__symbols);
                 let __sym0 = __pop_Variant0(__symbols);
                 let __start = __sym0.0.clone();
-                let __end = __sym5.2.clone();
-                let __nt = super::__action10::<>(input, __sym0, __sym1, __sym2, __sym3, __sym4, __sym5);
+                let __end = __sym3.2.clone();
+                let __nt = super::__action10::<>(input, __sym0, __sym1, __sym2, __sym3);
                 let __symbol = (__start, __Symbol::Variant5(__nt), __end);
-                (6, __symbol, 7)
+                (4, __symbol, 7)
             }
             16 => {
-                // Effect = "post", "(", Id, ":", Id, ")" => ActionFn(11);
+                // Effect = "outlives", "(", Id, ":", Id, ")" => ActionFn(11);
                 let __sym5 = __pop_Variant0(__symbols);
                 let __sym4 = __pop_Variant8(__symbols);
                 let __sym3 = __pop_Variant0(__symbols);
@@ -1226,9 +1212,9 @@ mod __intern_token {
                 "^(?u:block)",
                 "^(?u:borrow)",
                 "^(?u:goto)",
-                "^(?u:live)",
-                "^(?u:post)",
-                "^(?u:pre)",
+                "^(?u:kill)",
+                "^(?u:liveOnEntry)",
+                "^(?u:outlives)",
                 "^(?u:statement)",
                 "^(?u:\\{)",
                 "^(?u:\\})",
@@ -1244,9 +1230,9 @@ mod __intern_token {
                 __regex::Regex::new("^(?u:block)").unwrap(),
                 __regex::Regex::new("^(?u:borrow)").unwrap(),
                 __regex::Regex::new("^(?u:goto)").unwrap(),
-                __regex::Regex::new("^(?u:live)").unwrap(),
-                __regex::Regex::new("^(?u:post)").unwrap(),
-                __regex::Regex::new("^(?u:pre)").unwrap(),
+                __regex::Regex::new("^(?u:kill)").unwrap(),
+                __regex::Regex::new("^(?u:liveOnEntry)").unwrap(),
+                __regex::Regex::new("^(?u:outlives)").unwrap(),
                 __regex::Regex::new("^(?u:statement)").unwrap(),
                 __regex::Regex::new("^(?u:\\{)").unwrap(),
                 __regex::Regex::new("^(?u:\\})").unwrap(),
@@ -1441,7 +1427,7 @@ fn __action9<
     (_, _, _): (usize, &'input str, usize),
 ) -> Effect
 {
-    Effect::Live { region:region }
+    Effect::LiveOnEntry { region:region }
 }
 
 #[allow(unused_variables)]
@@ -1451,13 +1437,11 @@ fn __action10<
     input: &'input str,
     (_, _, _): (usize, &'input str, usize),
     (_, _, _): (usize, &'input str, usize),
-    (_, a, _): (usize, String, usize),
-    (_, _, _): (usize, &'input str, usize),
-    (_, b, _): (usize, String, usize),
+    (_, borrow, _): (usize, String, usize),
     (_, _, _): (usize, &'input str, usize),
 ) -> Effect
 {
-    Effect::PreOutlives { a:a, b:b }
+    Effect::Kill { borrow:borrow }
 }
 
 #[allow(unused_variables)]
@@ -1473,7 +1457,7 @@ fn __action11<
     (_, _, _): (usize, &'input str, usize),
 ) -> Effect
 {
-    Effect::PostOutlives { a:a, b:b }
+    Effect::Outlives { a:a, b:b }
 }
 
 #[allow(unused_variables)]

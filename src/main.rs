@@ -48,7 +48,7 @@ fn main() {
                 Ok(())
             })?;
 
-            write_to(&parent_path.join("cfgEdge.facts"), |file| {
+            write_to(&parent_path.join("nextStatement.facts"), |file| {
                 for block in &ir.blocks {
                     let mut prev_point = None;
                     for index in 0..block.statements.len() {
@@ -56,7 +56,7 @@ fn main() {
                         if let Some(prev_point) = prev_point {
                             write!(
                                 file,
-                                "\"{prev_point}\"\t\"{point}\"\n",
+                                "\"{prev_point}\"\t\"{point}\"\t\"infra\"\n",
                                 prev_point = prev_point,
                                 point = point,
                             )?;
@@ -68,12 +68,19 @@ fn main() {
                     if let Some(prev_point) = prev_point {
                         write!(
                             file,
-                            "\"{prev_point}\"\t\"{term_point}\"\n",
+                            "\"{prev_point}\"\t\"{term_point}\"\t\"infra\"\n",
                             prev_point = prev_point,
                             term_point = term_point,
                         )?;
                     }
+                }
 
+                Ok(())
+            })?;
+
+            write_to(&parent_path.join("goto.facts"), |file| {
+                for block in &ir.blocks {
+                    let term_point = format!("{}/{}", block.name, block.statements.len());
                     for goto in &block.goto {
                         write!(
                             file,
@@ -86,16 +93,35 @@ fn main() {
                 Ok(())
             })?;
 
-            write_to(&parent_path.join("regionLiveAt.facts"), |file| {
+            write_to(&parent_path.join("regionLiveOnEntryToStatement.facts"), |file| {
                 for block in &ir.blocks {
                     for (index, statement) in block.statements.iter().enumerate() {
                         let point = format!("{}/{}", block.name, index);
                         for effect in &statement.effects {
-                            if let Effect::Live { region } = effect {
+                            if let Effect::LiveOnEntry { region } = effect {
                                 write!(
                                     file,
                                     "\"{region}\"\t\"{point}\"\n",
                                     region = region,
+                                    point = point,
+                                )?;
+                            }
+                        }
+                    }
+                }
+                Ok(())
+            })?;
+
+            write_to(&parent_path.join("killed.facts"), |file| {
+                for block in &ir.blocks {
+                    for (index, statement) in block.statements.iter().enumerate() {
+                        let point = format!("{}/{}", block.name, index);
+                        for effect in &statement.effects {
+                            if let Effect::Kill { borrow } = effect {
+                                write!(
+                                    file,
+                                    "\"{borrow}\"\t\"{point}\"\n",
+                                    borrow = borrow,
                                     point = point,
                                 )?;
                             }
@@ -110,20 +136,7 @@ fn main() {
                     for (index, statement) in block.statements.iter().enumerate() {
                         let point = format!("{}/{}", block.name, index);
                         for effect in &statement.effects {
-                            if let Effect::PreOutlives { a, b } = effect {
-                                write!(
-                                    file,
-                                    "\"{a}\"\t\"{b}\"\t\"{point}\"\n",
-                                    a = a,
-                                    b = b,
-                                    point = point,
-                                )?;
-                            }
-                        }
-
-                        let point = format!("{}/{}", block.name, index + 1);
-                        for effect in &statement.effects {
-                            if let Effect::PostOutlives { a, b } = effect {
+                            if let Effect::Outlives { a, b } = effect {
                                 write!(
                                     file,
                                     "\"{a}\"\t\"{b}\"\t\"{point}\"\n",
