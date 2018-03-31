@@ -1,9 +1,15 @@
 #![feature(catch_expr)]
 #![feature(crate_visibility_modifier)]
+#![feature(dyn_trait)]
 #![feature(match_default_bindings)]
+#![feature(termination_trait_test)]
+
+#[cfg(test)]
+extern crate assert_cli;
 
 mod ir;
 mod parser;
+mod tests;
 
 use self::ir::*;
 

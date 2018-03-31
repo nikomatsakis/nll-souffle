@@ -6,6 +6,9 @@ authors = ["Niko Matsakis <niko@alum.mit.edu>"]
 [build-dependencies] # <-- We added this and everything after!
 lalrpop = "0.15.0"
 
+[dev-dependencies]
+assert_cli = "0.5.4"
+
 [dependencies]
 lalrpop-util = "0.15.0"
 regex = "0.2.1"
