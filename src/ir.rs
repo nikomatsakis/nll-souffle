@@ -13,7 +13,7 @@ pub struct Statement {
 }
 
 pub enum Effect {
-    Borrow { region: String },
+    Borrow { borrow: String, region: String },
     Live { region: String },
     PreOutlives { a: String, b: String },
     PostOutlives { a: String, b: String },

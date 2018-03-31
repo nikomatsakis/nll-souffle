@@ -33,12 +33,12 @@ fn main() {
                     for (index, statement) in block.statements.iter().enumerate() {
                         let point = format!("{}/{}", block.name, index);
                         for effect in &statement.effects {
-                            if let Effect::Borrow { region } = effect {
+                            if let Effect::Borrow { borrow, region } = effect {
                                 write!(
                                     file,
-                                    "\"{region}\"\t\"B@{borrow}\"\t\"{point}\"\n",
+                                    "\"{region}\"\t\"{borrow}\"\t\"{point}\"\n",
                                     region = region,
-                                    borrow = point,
+                                    borrow = borrow,
                                     point = point,
                                 )?
                             }
