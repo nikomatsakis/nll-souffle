@@ -1,0 +1,68 @@
+// fn bar() {
+//     let mut temp: &R0 mut Thing = &R1 mut Thing;
+//
+//     loop {
+//         let temp1 = &mut temp;
+//         match maybe_next(temp1) {
+//             Some(v) => { x = v; }
+//             None => { }
+//         }
+//     }
+// }
+
+
+// x: &x mut Thing
+// temp0: &temp0 mut Thing
+// temp1: &temp1 mut Thing
+// match0: Option<&match0 mut Thing>
+//
+
+block A {
+  // x = &B_thing mut Thing
+  statement {
+  }
+
+  goto { B }
+}
+
+block B {
+  // temp1 = &B_x mut *x
+  statement {
+    liveOnEntry(x)
+    borrow(B_x as B_x)
+    outlives(B_x: temp1)
+  }
+
+  // match0 = maybe_next::<mn>(temp0)
+  statement {
+    liveOnEntry(temp0)
+    liveOnEntry(x)
+    outlives(temp0: mn)
+    outlives(mn: match0)
+  }
+
+  // switch match0 { C, D }
+  goto { C D }
+}
+
+block C {
+  // x = match0.as<Some>.0
+  //
+  // kills B_B because that is a borrow of `*x`,
+  // and we changed what `x` refers to
+  statement {
+    liveOnEntry(match0)
+    kill(B_B)
+    outlives(match0: x)
+  }
+
+  goto { B }
+}
+
+block D {
+  statement {
+    liveOnEntry(x)
+  }
+
+  goto { B }
+}

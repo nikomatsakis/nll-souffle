@@ -1,0 +1,21 @@
+// fn bar() {
+//     let mut data = vec!['a', 'b', 'c'];   // B1/0
+//     let slice: &R0 _ = &R1 mut data[..];  // B1/1
+//     capitalize(slice);                    // B1/2
+//     data.push('d');                       // B1/3
+// }
+
+block B1 {
+  statement {
+  }
+  statement {
+    borrow(B0 as R1)
+    outlives(R1: R0)
+  }
+  statement {
+    liveOnEntry(R0)
+  }
+  statement {
+  }
+  goto { }
+}

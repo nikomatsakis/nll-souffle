@@ -1,0 +1,47 @@
+// x: &X i32
+// y: &Y i32
+//
+//                | Point |
+// x = &B_foo foo | B0/0  |
+// y = x          | B0/1  |
+// x = &B_bar bar | B0/2  |
+// use(x);        | B0/3  |
+// bar += 1;      | B0/4  |
+// use(y);        | B0/5  |
+
+block B0 {
+  // x = &B_foo foo
+  statement {
+    borrow(B_foo as B_foo)
+    outlives(B_foo: X)
+  }
+
+  // y = x
+  statement {
+    liveOnEntry(X)
+    outlives(X: Y)
+  }
+
+  // x = &B_bar bar
+  statement {
+    borrow(B_bar as B_bar)
+    liveOnEntry(Y)
+    outlives(B_bar: X)
+  }
+
+  // use(x)
+  statement {
+    liveOnEntry(X)
+    liveOnEntry(Y)
+  }
+
+  // bar += 1
+  statement {
+    liveOnEntry(Y)
+  }
+
+  // use(y)
+  statement {
+    liveOnEntry(Y)
+  }
+}

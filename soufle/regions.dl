@@ -1,0 +1,80 @@
+.type region
+.type borrow
+.type point
+.type edgeKind // "inter" for between blocks, "intra" for between statements
+
+///////////////////////////////////////////////////////////////////////////
+// -- inputs --
+
+.decl borrowRegion( r:region, b:borrow, p:point )
+.input borrowRegion
+.decl nextStatement( from:point, to:point )
+.input nextStatement
+.decl goto( from:point, to:point )
+.input goto
+.decl regionLiveOnEntryToStatement( r:region, p:point )
+.input regionLiveOnEntryToStatement
+.decl killed( b:borrow, p:point )
+.input killed
+.decl outlives( r_a:region, r_b:region, p:point )
+.input outlives
+
+///////////////////////////////////////////////////////////////////////////
+// -- analysis --
+
+///////////////////////////////////////////////////////////////////////////
+.decl cfgEdge( p:point, q:point)
+
+cfgEdge(P, Q) :-
+  nextStatement(P, Q).
+
+cfgEdge(P, Q) :-
+  goto(P, Q).
+
+///////////////////////////////////////////////////////////////////////////
+.decl regionLiveAt( r:region, p:point )
+
+regionLiveAt(R, P) :-
+  regionLiveOnEntryToStatement(R, P).
+
+// Propagate across basic blocks.
+regionLiveAt(R, P) :-
+  goto(P, Q),
+  regionLiveOnEntryToStatement(R, Q).
+
+///////////////////////////////////////////////////////////////////////////
+.decl pointsTo( r:region, b:borrow, p:point )
+
+// After a `&'R foo` executes, the borrow region `'R` points to that borrow.
+pointsTo(R, B, P) :-
+  borrowRegion(R, B, P).
+
+// If we have `R1: R2 @ P`, this means that data with lifetime R1 is flowing
+// into a place typed as R2; hence R2 points to everything that R1 points at.
+pointsTo(R1, B, Q) :-
+  nextStatement(P, Q), // P is the point before effects happen, Q is point after
+  outlives(R2, R1, P), // P establishes R2: R1, means data from R2 flows into R1
+  pointsTo(R2, B, P),  // R2 points at B on entry, so R1 will point at B on exit...
+  !killed(B, P).       // ...unless B is killed by this statement (no more path
+                       // to the data it refers to)
+
+// Carry points to across edges, as long as region is live across that edge.
+//
+// Note assumption: if you have `x = ...`, then regions in `x` are dead
+// on entry to that statement (P).
+pointsTo(R1, B, Q) :-
+  nextStatement(P, Q), // P is the point before effects happen, Q is point after
+  regionLiveAt(R1, Q), // Region is live at the end of the statement
+  pointsTo(R1, B, P),  // On entry R1 pointed at B, so will point at B on exit...
+  !killed(B, P).       // ...unless B is killed by this statement (no more path
+                       // to the data it refers to)
+
+///////////////////////////////////////////////////////////////////////////
+.decl borrowLiveAt( b:borrow, p:point )
+.output borrowLiveAt
+
+// A borrow is live if any of the regions that may reference it
+// are live at that particular point.
+borrowLiveAt(B, P) :-
+  regionLiveAt(R, P),
+  pointsTo(R, B, P).
