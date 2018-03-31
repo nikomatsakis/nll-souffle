@@ -1,0 +1,40 @@
+use ir::*;
+
+grammar;
+
+pub Input: Input = {
+    Comment* <blocks:Block*> => Input { <> }
+};
+
+Comment: () = {
+    r"//.*"
+};
+
+Region: String = {
+    Id
+};
+
+Block: Block = {
+    "block" <name:Id> "{" <statements:Statement*> <goto:Goto>
+       "}" => Block { <> },
+};
+
+Goto: Vec<String> = {
+    "goto" "{" <Id*> "}",
+    () => Vec::new(),
+};
+
+Statement: Statement = {
+    Comment* "statement" "{" <effects:Effect*> "}" => Statement { <> },
+};
+
+Effect: Effect = {
+    "borrow" "(" <region:Id> ")" => Effect::Borrow { <> },
+    "live" "(" <region:Id> ")" => Effect::Live { <> },
+    "pre" "(" <a:Id> ":" <b:Id> ")" => Effect::PreOutlives { <> },
+    "post" "(" <a:Id> ":" <b:Id> ")" => Effect::PostOutlives { <> },
+};
+
+Id: String = {
+    r"[a-zA-Z_][a-zA-Z_0-9]*" => <>.to_string(),
+};
