@@ -15,7 +15,7 @@ Region: String = {
 };
 
 Block: Block = {
-    "block" <name:Id> "{" <statements:Statement*> <goto:Goto>
+    "block" <name:Id> "{" <statements:Statement*> Comment* <goto:Goto>
        "}" => Block { <> },
 };
 
