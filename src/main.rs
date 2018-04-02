@@ -62,7 +62,7 @@ fn main() {
                         if let Some(prev_point) = prev_point {
                             write!(
                                 file,
-                                "\"{prev_point}\"\t\"{point}\"\t\"infra\"\n",
+                                "\"{prev_point}\"\t\"{point}\"\n",
                                 prev_point = prev_point,
                                 point = point,
                             )?;
@@ -74,7 +74,7 @@ fn main() {
                     if let Some(prev_point) = prev_point {
                         write!(
                             file,
-                            "\"{prev_point}\"\t\"{term_point}\"\t\"infra\"\n",
+                            "\"{prev_point}\"\t\"{term_point}\"\n",
                             prev_point = prev_point,
                             term_point = term_point,
                         )?;
