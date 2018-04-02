@@ -19,8 +19,6 @@ mod parser;
 mod solve;
 mod tests;
 
-use self::ir::*;
-
 use std::env;
 use std::error::Error;
 use std::fs::File;
@@ -68,75 +66,51 @@ fn main() {
             })?;
 
             write_to(&parent_path.join("goto.facts"), |file| {
-                for block in &ir.blocks {
-                    let term_point = format!("{}/{}", block.name, block.statements.len());
-                    for goto in &block.goto {
-                        write!(
-                            file,
-                            "\"{term_point}\"\t\"{goto}/0\"\n",
-                            term_point = term_point,
-                            goto = goto,
-                        )?;
-                    }
-                }
+                ir.for_each_goto_fact(|prev_point, point| {
+                    write!(
+                        file,
+                        "\"{prev_point}\"\t\"{point}\"\n",
+                        prev_point = prev_point,
+                        point = point,
+                    )
+                })?;
                 Ok(())
             })?;
 
             write_to(&parent_path.join("regionLiveOnEntryToStatement.facts"), |file| {
-                for block in &ir.blocks {
-                    for (index, statement) in block.statements.iter().enumerate() {
-                        let point = format!("{}/{}", block.name, index);
-                        for effect in &statement.effects {
-                            if let Effect::LiveOnEntry { region } = effect {
-                                write!(
-                                    file,
-                                    "\"{region}\"\t\"{point}\"\n",
-                                    region = region,
-                                    point = point,
-                                )?;
-                            }
-                        }
-                    }
-                }
+                ir.for_each_region_live_on_entry_fact(|region, point| {
+                    write!(
+                        file,
+                        "\"{region}\"\t\"{point}\"\n",
+                        region = region,
+                        point = point,
+                    )
+                })?;
                 Ok(())
             })?;
 
             write_to(&parent_path.join("killed.facts"), |file| {
-                for block in &ir.blocks {
-                    for (index, statement) in block.statements.iter().enumerate() {
-                        let point = format!("{}/{}", block.name, index);
-                        for effect in &statement.effects {
-                            if let Effect::Kill { borrow } = effect {
-                                write!(
-                                    file,
-                                    "\"{borrow}\"\t\"{point}\"\n",
-                                    borrow = borrow,
-                                    point = point,
-                                )?;
-                            }
-                        }
-                    }
-                }
+                ir.for_each_killed_fact(|borrow, point| {
+                    write!(
+                        file,
+                        "\"{borrow}\"\t\"{point}\"\n",
+                        borrow = borrow,
+                        point = point,
+                    )
+                })?;
                 Ok(())
             })?;
 
             write_to(&parent_path.join("outlives.facts"), |file| {
-                for block in &ir.blocks {
-                    for (index, statement) in block.statements.iter().enumerate() {
-                        let point = format!("{}/{}", block.name, index);
-                        for effect in &statement.effects {
-                            if let Effect::Outlives { a, b } = effect {
-                                write!(
-                                    file,
-                                    "\"{a}\"\t\"{b}\"\t\"{point}\"\n",
-                                    a = a,
-                                    b = b,
-                                    point = point,
-                                )?;
-                            }
-                        }
-                    }
-                }
+                ir.for_each_outlives_fact(|a, b, point| {
+                    write!(
+                        file,
+                        "\"{a}\"\t\"{b}\"\t\"{point}\"\n",
+                        a = a,
+                        b = b,
+                        point = point,
+                    )
+                })?;
                 Ok(())
             })?;
 

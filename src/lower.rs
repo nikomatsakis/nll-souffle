@@ -40,4 +40,68 @@ impl Input {
 
         Ok(())
     }
+
+    crate fn for_each_goto_fact<E>(
+        &self,
+        mut op: impl FnMut(&str, &str) -> Result<(), E>,
+    ) -> Result<(), E> {
+        for block in &self.blocks {
+            let term_point = &format!("{}/{}", block.name, block.statements.len());
+            for goto in &block.goto {
+                op(term_point, &format!("{}/0", goto))?;
+            }
+        }
+        Ok(())
+    }
+
+    crate fn for_each_region_live_on_entry_fact<E>(
+        &self,
+        mut op: impl FnMut(&str, &str) -> Result<(), E>,
+    ) -> Result<(), E> {
+        for block in &self.blocks {
+            for (index, statement) in block.statements.iter().enumerate() {
+                let point = &format!("{}/{}", block.name, index);
+                for effect in &statement.effects {
+                    if let Effect::LiveOnEntry { region } = effect {
+                        op(region, point)?;
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
+
+    crate fn for_each_killed_fact<E>(
+        &self,
+        mut op: impl FnMut(&str, &str) -> Result<(), E>,
+    ) -> Result<(), E> {
+        for block in &self.blocks {
+            for (index, statement) in block.statements.iter().enumerate() {
+                let point = &format!("{}/{}", block.name, index);
+                for effect in &statement.effects {
+                    if let Effect::Kill { borrow } = effect {
+                        op(borrow, point)?;
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
+
+    crate fn for_each_outlives_fact<E>(
+        &self,
+        mut op: impl FnMut(&str, &str, &str) -> Result<(), E>,
+    ) -> Result<(), E> {
+        for block in &self.blocks {
+            for (index, statement) in block.statements.iter().enumerate() {
+                let point = &format!("{}/{}", block.name, index);
+                for effect in &statement.effects {
+                    if let Effect::Outlives { a, b } = effect {
+                        op(a, b, point)?;
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
 }
