@@ -22,6 +22,13 @@
 // -- analysis --
 
 ///////////////////////////////////////////////////////////////////////////
+.decl cfgEdge( p:point, q:point )
+.output cfgEdge
+
+cfgEdge(P, Q) :- nextStatement(P, Q).
+cfgEdge(P, Q) :- goto(P, Q).
+
+///////////////////////////////////////////////////////////////////////////
 .decl regionLiveAt( r:region, p:point )
 
 regionLiveAt(R, P) :-
@@ -73,7 +80,7 @@ restricts(R1, B, Q) :-
 // Note assumption: if you have `x = ...`, then regions in `x` are dead
 // on entry to that statement (P).
 restricts(R1, B, Q) :-
-  nextStatement(P, Q), // P is the point before effects happen, Q is point after
+  cfgEdge(P, Q), // P is the point before effects happen, Q is point after
   regionLiveAt(R1, Q), // Region is live at the end of the statement
   restricts(R1, B, P),  // On entry R1 pointed at B, so will point at B on exit...
   !killed(B, P).       // ...unless B is killed by this statement (no more path
