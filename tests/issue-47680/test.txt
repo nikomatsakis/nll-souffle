@@ -1,9 +1,9 @@
 // fn bar() {
-//     let mut temp: &R0 mut Thing = &R1 mut Thing;
+//     let mut x: &R0 mut Thing = &R1 mut Thing;
 //
 //     loop {
-//         let temp1 = &mut temp;
-//         match maybe_next(temp1) {
+//         let temp0 = &mut x;
+//         match maybe_next(temp0) {
 //             Some(v) => { x = v; }
 //             None => { }
 //         }
@@ -13,7 +13,6 @@
 
 // x: &x mut Thing
 // temp0: &temp0 mut Thing
-// temp1: &temp1 mut Thing
 // match0: Option<&match0 mut Thing>
 //
 
@@ -26,19 +25,18 @@ block A {
 }
 
 block B {
-  // temp1 = &B_x mut *x
+  // temp0 = &B_x mut *x
   statement {
     liveOnEntry(x)
     borrow(B_x as B_x)
-    outlives(B_x: temp1)
+    outlives(B_x: temp0)
   }
 
-  // match0 = maybe_next::<mn>(temp0)
+  // match0 = maybe_next::<match0>(temp0)
   statement {
     liveOnEntry(temp0)
     liveOnEntry(x)
-    outlives(temp0: mn)
-    outlives(mn: match0)
+    outlives(temp0: match0)
   }
 
   // switch match0 { C, D }
@@ -52,7 +50,7 @@ block C {
   // and we changed what `x` refers to
   statement {
     liveOnEntry(match0)
-    kill(B_B)
+    kill(B_x)
     outlives(match0: x)
   }
 

@@ -52,3 +52,19 @@ fn problem_case_1() -> Result<(), Box<dyn Error>> {
         )
     }
 }
+
+#[test]
+fn issue_47680() -> Result<(), Box<dyn Error>> {
+    // Borrow is not live around loop.
+    run_souffle! {
+        in("issue-47680") expecting (
+            r#"borrowLiveAt
+===============
+"B_x"	"B/1"
+"B_x"	"C/0"
+"B_x"	"B/2"
+===============
+"#
+        )
+    }
+}
