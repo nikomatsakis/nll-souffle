@@ -1,4 +1,5 @@
 #![feature(catch_expr)]
+#![feature(crate_in_paths)]
 #![feature(crate_visibility_modifier)]
 #![feature(dyn_trait)]
 #![feature(match_default_bindings)]
@@ -7,8 +8,15 @@
 #[cfg(test)]
 extern crate assert_cli;
 
+#[macro_use]
+extern crate abomonation_derive;
+extern crate abomonation;
+extern crate differential_dataflow;
+
 mod ir;
+mod lower;
 mod parser;
+mod solve;
 mod tests;
 
 use self::ir::*;
@@ -35,52 +43,27 @@ fn main() {
             };
 
             write_to(&parent_path.join("borrowRegion.facts"), |file| {
-                for block in &ir.blocks {
-                    for (index, statement) in block.statements.iter().enumerate() {
-                        let point = format!("{}/{}", block.name, index);
-                        for effect in &statement.effects {
-                            if let Effect::Borrow { borrow, region } = effect {
-                                write!(
-                                    file,
-                                    "\"{region}\"\t\"{borrow}\"\t\"{point}\"\n",
-                                    region = region,
-                                    borrow = borrow,
-                                    point = point,
-                                )?
-                            }
-                        }
-                    }
-                }
+                ir.for_each_borrow_region_fact(|region, borrow, point| {
+                    write!(
+                        file,
+                        "\"{region}\"\t\"{borrow}\"\t\"{point}\"\n",
+                        region = region,
+                        borrow = borrow,
+                        point = point,
+                    )
+                })?;
                 Ok(())
             })?;
 
             write_to(&parent_path.join("nextStatement.facts"), |file| {
-                for block in &ir.blocks {
-                    let mut prev_point = None;
-                    for index in 0..block.statements.len() {
-                        let point = format!("{}/{}", block.name, index);
-                        if let Some(prev_point) = prev_point {
-                            write!(
-                                file,
-                                "\"{prev_point}\"\t\"{point}\"\n",
-                                prev_point = prev_point,
-                                point = point,
-                            )?;
-                        }
-                        prev_point = Some(point);
-                    }
-
-                    let term_point = format!("{}/{}", block.name, block.statements.len());
-                    if let Some(prev_point) = prev_point {
-                        write!(
-                            file,
-                            "\"{prev_point}\"\t\"{term_point}\"\n",
-                            prev_point = prev_point,
-                            term_point = term_point,
-                        )?;
-                    }
-                }
-
+                ir.for_each_next_statement_fact(|prev_point, point| {
+                    write!(
+                        file,
+                        "\"{prev_point}\"\t\"{point}\"\n",
+                        prev_point = prev_point,
+                        point = point,
+                    )
+                })?;
                 Ok(())
             })?;
 
