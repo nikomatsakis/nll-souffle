@@ -12,6 +12,7 @@ extern crate assert_cli;
 extern crate abomonation_derive;
 extern crate abomonation;
 extern crate differential_dataflow;
+extern crate timely;
 
 mod ir;
 mod lower;
