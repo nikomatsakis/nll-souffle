@@ -16,6 +16,7 @@ extern crate differential_dataflow;
 extern crate timely;
 
 mod ir;
+mod facts;
 mod lower;
 mod parser;
 mod solve;

@@ -1,5 +1,6 @@
 #![allow(dead_code, unused_variables, unused_mut)]
 
+use facts::*;
 use ir;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -8,41 +9,6 @@ use timely::{self, dataflow::*};
 
 use differential_dataflow::input::Input;
 use differential_dataflow::operators::*;
-
-macro_rules! from_usize {
-    ($t: ident) => {
-        impl From<usize> for $t {
-            fn from(index: usize) -> $t {
-                $t { index }
-            }
-        }
-
-        impl Into<usize> for $t {
-            fn into(self) -> usize {
-                self.index
-            }
-        }
-    };
-}
-
-// Types whose definitions I don't actually know.
-#[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Copy, Abomonation, Debug, Hash)]
-struct Region {
-    index: usize,
-}
-from_usize!(Region);
-
-#[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Copy, Abomonation, Debug, Hash)]
-struct Borrow {
-    index: usize,
-}
-from_usize!(Borrow);
-
-#[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Copy, Abomonation, Debug, Hash)]
-struct Point {
-    index: usize,
-}
-from_usize!(Point);
 
 struct Interner<TargetType: From<usize> + Copy> {
     strings: HashMap<String, TargetType>,
