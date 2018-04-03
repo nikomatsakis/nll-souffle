@@ -17,6 +17,7 @@ extern crate timely;
 
 mod ir;
 mod facts;
+mod intern;
 mod lower;
 mod parser;
 mod solve;
