@@ -90,14 +90,18 @@ impl Input {
 
     crate fn for_each_outlives_fact<E>(
         &self,
-        mut op: impl FnMut(&str, &str, &str) -> Result<(), E>,
+        mut op: impl FnMut(&str, &str, &str, &str) -> Result<(), E>,
     ) -> Result<(), E> {
         for block in &self.blocks {
             for (index, statement) in block.statements.iter().enumerate() {
                 let point = &format!("{}/{}", block.name, index);
+                let successor_point = &format!("{}/{}", block.name, index + 1);
                 for effect in &statement.effects {
-                    if let Effect::Outlives { a, b } = effect {
-                        op(a, b, point)?;
+                    if let Effect::Outlives { time, a, b } = effect {
+                        match time {
+                            OutlivesTime::Pre => op(point, a, b, point)?,
+                            OutlivesTime::Post => op(point, a, b, successor_point)?,
+                        }
                     }
                 }
             }

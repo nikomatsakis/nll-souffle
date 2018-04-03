@@ -32,7 +32,8 @@ Effect: Effect = {
     "borrow" "(" <borrow:Id> "as" <region:Id> ")" => Effect::Borrow { <> },
     "liveOnEntry" "(" <region:Id> ")" => Effect::LiveOnEntry { <> },
     "kill" "(" <borrow:Id> ")" => Effect::Kill { <> },
-    "outlives" "(" <a:Id> ":" <b:Id> ")" => Effect::Outlives { <> },
+    "pre" "(" <a:Id> ":" <b:Id> ")" => Effect::Outlives { time: OutlivesTime::Pre, <> },
+    "post" "(" <a:Id> ":" <b:Id> ")" => Effect::Outlives { time: OutlivesTime::Post, <> },
 };
 
 Id: String = {

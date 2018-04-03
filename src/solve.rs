@@ -137,6 +137,24 @@ where
     }
 }
 
+impl<A, FromA, B, FromB, C, FromC, D, FromD> Intern<(FromA, FromB, FromC, FromD)> for (A, B, C, D)
+where
+    A: Intern<FromA>,
+    B: Intern<FromB>,
+    C: Intern<FromC>,
+    D: Intern<FromD>,
+{
+    fn intern(tables: &mut InternerTables, input: (FromA, FromB, FromC, FromD)) -> (A, B, C, D) {
+        let (from_a, from_b, from_c, from_d) = input;
+        (
+            A::intern(tables, from_a),
+            B::intern(tables, from_b),
+            C::intern(tables, from_c),
+            D::intern(tables, from_d),
+        )
+    }
+}
+
 trait PushInterned<E> {
     fn push_interned<I>(&mut self, tables: &mut InternerTables, element: I)
     where
@@ -213,7 +231,7 @@ crate fn region_computation(input: &ir::Input) {
         input,
         for_each_outlives_fact,
         intern_tables,
-        (a: Region, b: Region, p: Point),
+        (p: Point, a: Region, b: Region, q: Point),
     );
 
     timely::execute_from_args(vec![].into_iter(), {
@@ -237,7 +255,7 @@ crate fn region_computation(input: &ir::Input) {
                 let (input_4, region_live_on_entry) =
                     scope.new_collection::<(Region, Point), isize>();
                 let (input_5, killed) = scope.new_collection::<(Borrow, Point), isize>();
-                let (input_6, outlives) = scope.new_collection::<(Region, Region, Point), isize>();
+                let (input_6, outlives) = scope.new_collection::<(Point, Region, Region, Point), isize>();
 
                 // cfgEdge(P, Q) :- nextStatement(P, Q).
                 // cfgEdge(P, Q) :- goto(P, Q).
@@ -282,16 +300,13 @@ crate fn region_computation(input: &ir::Input) {
                     // restricts(R1, B, Q) :-
                     //   restricts(R2, B, P)
                     //   !killed(B, P)
-                    //   nextStatement(P, Q)
-                    //   outlives(R2, R1, P)
+                    //   outlives(P, R2, R1, Q)
                     let restricts2 = restricts
                         .map(|(r2, b, p)| ((b, p), r2))
                         .antijoin(&killed)
-                        .map(|((b, p), r2)| (p, (b, r2)))
-                        .join(&next_statement)
-                        .map(|(p, (b, r2), q)| ((p, r2), (b, q)))
-                        .join(&outlives.map(|(r2, r1, p)| ((p, r2), r1)))
-                        .map(|((p, r2), (b, q), r1)| (r1, b, q));
+                        .map(|((b, p), r2)| ((p, r2), b))
+                        .join(&outlives.map(|(p, r2, r1, q)| ((p, r2), (r1, q))))
+                        .map(|((p, r2), b, (r1, q))| (r1, b, q));
 
                     // restricts(R1, B, Q) :-
                     //   restricts(R1, B, P)

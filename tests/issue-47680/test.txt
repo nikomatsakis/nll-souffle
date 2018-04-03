@@ -29,14 +29,14 @@ block B {
   statement {
     liveOnEntry(x)
     borrow(B_x as B_x)
-    outlives(B_x: temp0)
+    post(B_x: temp0)
   }
 
   // match0 = maybe_next::<match0>(temp0)
   statement {
     liveOnEntry(temp0)
     liveOnEntry(x)
-    outlives(temp0: match0)
+    post(temp0: match0)
   }
 
   // switch match0 { C, D }
@@ -51,7 +51,7 @@ block C {
   statement {
     liveOnEntry(match0)
     kill(B_x)
-    outlives(match0: x)
+    post(match0: x)
   }
 
   goto { B }

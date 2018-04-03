@@ -27,5 +27,10 @@ pub enum Effect {
     /// into `b`; this is positioned at the start of the statement,
     /// and hence it indicates that anything that region `a` points
     /// to, region `b` may now point to. Used for assignments.
-    Outlives { a: String, b: String },
+    Outlives { time: OutlivesTime, a: String, b: String },
+}
+
+pub enum OutlivesTime {
+    Pre,
+    Post,
 }

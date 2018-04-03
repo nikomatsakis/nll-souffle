@@ -13,20 +13,20 @@ block B0 {
   // x = &B_foo foo
   statement {
     borrow(B_foo as B_foo)
-    outlives(B_foo: X)
+    post(B_foo: X)
   }
 
   // y = x
   statement {
     liveOnEntry(X)
-    outlives(X: Y)
+    post(X: Y)
   }
 
   // x = &B_bar bar
   statement {
     borrow(B_bar as B_bar)
     liveOnEntry(Y)
-    outlives(B_bar: X)
+    post(B_bar: X)
   }
 
   // use(x)

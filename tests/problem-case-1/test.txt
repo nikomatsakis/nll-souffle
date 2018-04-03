@@ -10,7 +10,7 @@ block B1 {
   }
   statement {
     borrow(B0 as R1)
-    outlives(R1: R0)
+    post(R1: R0)
   }
   statement {
     liveOnEntry(R0)

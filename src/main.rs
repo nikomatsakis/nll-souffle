@@ -146,13 +146,14 @@ fn dump_facts(input_file: &String, ir: &ir::Input) -> Result<(), Box<Error>> {
     })?;
 
     write_to(&parent_path.join("outlives.facts"), |file| {
-        ir.for_each_outlives_fact(|a, b, point| {
+        ir.for_each_outlives_fact(|p, a, b, q| {
             write!(
                 file,
-                "\"{a}\"\t\"{b}\"\t\"{point}\"\n",
+                "\"{p}\"\t\"{a}\"\t\"{b}\"\t\"{q}\"\n",
+                p = p,
                 a = a,
                 b = b,
-                point = point,
+                q = q,
             )
         })?;
         Ok(())

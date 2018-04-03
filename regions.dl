@@ -15,7 +15,7 @@
 .input regionLiveOnEntryToStatement
 .decl killed( b:borrow, p:point )
 .input killed
-.decl outlives( r_a:region, r_b:region, p:point )
+.decl outlives( p:point, r_a:region, r_b:region, q:point )
 .input outlives
 
 ///////////////////////////////////////////////////////////////////////////
@@ -23,7 +23,6 @@
 
 ///////////////////////////////////////////////////////////////////////////
 .decl cfgEdge( p:point, q:point )
-.output cfgEdge
 
 cfgEdge(P, Q) :- nextStatement(P, Q).
 cfgEdge(P, Q) :- goto(P, Q).
@@ -69,8 +68,7 @@ restricts(R, B, P) :-
 // If we have `R1: R2 @ P`, this means that data with lifetime R1 is flowing
 // into a place typed as R2; hence R2 points to everything that R1 points at.
 restricts(R1, B, Q) :-
-  nextStatement(P, Q), // P is the point before effects happen, Q is point after
-  outlives(R2, R1, P), // P establishes R2: R1, means data from R2 flows into R1
+  outlives(P, R2, R1, Q), // P establishes R2: R1, means data from R2 flows into R1
   restricts(R2, B, P),  // R2 points at B on entry, so R1 will point at B on exit...
   !killed(B, P).       // ...unless B is killed by this statement (no more path
                        // to the data it refers to)
