@@ -32,11 +32,12 @@ block B {
     post(B_x: temp0)
   }
 
-  // match0 = maybe_next::<match0>(temp0)
+  // match0 = maybe_next::<mn>(temp0)
   statement {
     liveOnEntry(temp0)
     liveOnEntry(x)
-    post(temp0: match0)
+    pre(temp0: mn)
+    post(mn: match0)
   }
 
   // switch match0 { C, D }
