@@ -170,6 +170,15 @@ impl<E> PushInterned<E> for Vec<E> {
     }
 }
 
+struct AllFacts {
+    borrow_region: Vec<(Region, Borrow, Point)>,
+    next_statement: Vec<(Point, Point)>,
+    goto: Vec<(Point, Point)>,
+    region_live_on_entry: Vec<(Region, Point)>,
+    killed: Vec<(Borrow, Point)>,
+    outlives: Vec<(Point, Region, Region, Point)>,
+}
+
 // This basically recreates what is in regions.dl
 crate fn region_computation(input: &ir::Input) {
     let mut intern_tables = InternerTables::new();
@@ -192,50 +201,67 @@ crate fn region_computation(input: &ir::Input) {
         }
     }
 
-    let borrow_region_facts = collect_facts!(
-        input,
-        for_each_borrow_region_fact,
-        intern_tables,
-        (r:Region, b:Borrow, p:Point),
-    );
+    let all_facts = AllFacts {
+        borrow_region: collect_facts!(
+            input,
+            for_each_borrow_region_fact,
+            intern_tables,
+            (r: Region, b: Borrow, p: Point),
+        ),
 
-    let next_statement_facts = collect_facts!(
-        input,
-        for_each_next_statement_fact,
-        intern_tables,
-        (p:Point, q:Point),
-    );
+        next_statement: collect_facts!(
+            input,
+            for_each_next_statement_fact,
+            intern_tables,
+            (p: Point, q: Point),
+        ),
 
-    let goto_facts = collect_facts!(
-        input,
-        for_each_goto_fact,
-        intern_tables,
-        (p: Point, q: Point),
-    );
+        goto: collect_facts!(
+            input,
+            for_each_goto_fact,
+            intern_tables,
+            (p: Point, q: Point),
+        ),
 
-    let region_live_on_entry_facts = collect_facts!(
-        input,
-        for_each_region_live_on_entry_fact,
-        intern_tables,
-        (p: Region, q: Point),
-    );
+        region_live_on_entry: collect_facts!(
+            input,
+            for_each_region_live_on_entry_fact,
+            intern_tables,
+            (p: Region, q: Point),
+        ),
 
-    let killed_facts = collect_facts!(
-        input,
-        for_each_killed_fact,
-        intern_tables,
-        (b: Borrow, p: Point),
-    );
+        killed: collect_facts!(
+            input,
+            for_each_killed_fact,
+            intern_tables,
+            (b: Borrow, p: Point),
+        ),
 
-    let outlives_facts = collect_facts!(
-        input,
-        for_each_outlives_fact,
-        intern_tables,
-        (p: Point, a: Region, b: Region, q: Point),
-    );
+        outlives: collect_facts!(
+            input,
+            for_each_outlives_fact,
+            intern_tables,
+            (p: Point, a: Region, b: Region, q: Point),
+        ),
+    };
 
+    push_timely_facts(all_facts, borrow_live_at_vec.clone());
+
+    println!("vvv borrowLiveAt vvv");
+    let mut vector = borrow_live_at_vec.lock().unwrap().clone();
+    vector.sort();
+    for (borrow, point) in vector {
+        println!(
+            "borrow {} live at {}",
+            intern_tables.borrows.untern(borrow),
+            intern_tables.points.untern(point),
+        );
+    }
+    println!("^^^ borrowLiveAt ^^^");
+}
+
+fn push_timely_facts(facts: AllFacts, borrow_live_at_vec: Arc<Mutex<Vec<(Borrow, Point)>>>) {
     timely::execute_from_args(vec![].into_iter(), {
-        let borrow_live_at_vec = borrow_live_at_vec.clone();
         move |worker| {
             let probe = &mut ProbeHandle::new();
 
@@ -255,7 +281,8 @@ crate fn region_computation(input: &ir::Input) {
                 let (input_4, region_live_on_entry) =
                     scope.new_collection::<(Region, Point), isize>();
                 let (input_5, killed) = scope.new_collection::<(Borrow, Point), isize>();
-                let (input_6, outlives) = scope.new_collection::<(Point, Region, Region, Point), isize>();
+                let (input_6, outlives) =
+                    scope.new_collection::<(Point, Region, Region, Point), isize>();
 
                 // cfgEdge(P, Q) :- nextStatement(P, Q).
                 // cfgEdge(P, Q) :- goto(P, Q).
@@ -271,12 +298,8 @@ crate fn region_computation(input: &ir::Input) {
                     //   regionLiveOnEntryToStatement(R, Q).
                     let region_live_at2 = {
                         let goto_invert = goto.map(|(p, q)| (q, p));
-                        let region_live_on_entry_invert =
-                            region_live_on_entry.map(|(r, q)| (q, r));
-                        goto_invert
-                            .join_map(&region_live_on_entry_invert, |_q, &p, &r| {
-                                (r, p)
-                            })
+                        let region_live_on_entry_invert = region_live_on_entry.map(|(r, q)| (q, r));
+                        goto_invert.join_map(&region_live_on_entry_invert, |_q, &p, &r| (r, p))
                     };
 
                     region_live_at1
@@ -318,9 +341,9 @@ crate fn region_computation(input: &ir::Input) {
                         .antijoin(&killed)
                         .map(|((b, p), r1)| (p, (b, r1)))
                         .join(&cfg_edge)
-                        .map(|(p, (b, r1), q)| ((r1, q), (b, p)))
+                        .map(|(_p, (b, r1), q)| ((r1, q), b))
                         .semijoin(&region_live_at)
-                        .map(|((r1, q), (b, p))| (r1, b, q));
+                        .map(|((r1, q), b)| (r1, b, q));
 
                     restricts1
                         .concat(&restricts2)
@@ -347,7 +370,7 @@ crate fn region_computation(input: &ir::Input) {
             });
 
             macro_rules! add_fact {
-                ($input_name:ident, $facts_name:ident) => {
+                ($input_name:ident, $facts_name:expr) => {
                     for fact in $facts_name.iter().cloned() {
                         $input_name.insert(fact);
                     }
@@ -355,24 +378,12 @@ crate fn region_computation(input: &ir::Input) {
                 }
             }
 
-            add_fact!(input_borrow_region, borrow_region_facts);
-            add_fact!(input_next_statement, next_statement_facts);
-            add_fact!(input_goto, goto_facts);
-            add_fact!(input_region_live_on_entry, region_live_on_entry_facts);
-            add_fact!(input_killed, killed_facts);
-            add_fact!(input_outlives, outlives_facts);
+            add_fact!(input_borrow_region, facts.borrow_region);
+            add_fact!(input_next_statement, facts.next_statement);
+            add_fact!(input_goto, facts.goto);
+            add_fact!(input_region_live_on_entry, facts.region_live_on_entry);
+            add_fact!(input_killed, facts.killed);
+            add_fact!(input_outlives, facts.outlives);
         }
     }).unwrap();
-
-    println!("vvv borrowLiveAt vvv");
-    let mut vector = borrow_live_at_vec.lock().unwrap().clone();
-    vector.sort();
-    for (borrow, point) in vector {
-        println!(
-            "borrow {} live at {}",
-            intern_tables.borrows.untern(borrow),
-            intern_tables.points.untern(point),
-        );
-    }
-    println!("^^^ borrowLiveAt ^^^");
 }
