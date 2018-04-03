@@ -1,7 +1,7 @@
 #![allow(dead_code, unused_variables, unused_mut)]
 
 use facts::*;
-use intern::{Intern, InternerTables};
+use intern::{InternTo, InternerTables};
 use ir;
 use std::sync::{Arc, Mutex};
 
@@ -10,63 +10,13 @@ use timely::{self, dataflow::*};
 use differential_dataflow::input::Input;
 use differential_dataflow::operators::*;
 
-impl<A, FromA, B, FromB> Intern<(FromA, FromB)> for (A, B)
-where
-    A: Intern<FromA>,
-    B: Intern<FromB>,
-{
-    fn intern(tables: &mut InternerTables, input: (FromA, FromB)) -> (A, B) {
-        let (from_a, from_b) = input;
-        (A::intern(tables, from_a), B::intern(tables, from_b))
-    }
-}
-
-impl<A, FromA, B, FromB, C, FromC> Intern<(FromA, FromB, FromC)> for (A, B, C)
-where
-    A: Intern<FromA>,
-    B: Intern<FromB>,
-    C: Intern<FromC>,
-{
-    fn intern(tables: &mut InternerTables, input: (FromA, FromB, FromC)) -> (A, B, C) {
-        let (from_a, from_b, from_c) = input;
-        (
-            A::intern(tables, from_a),
-            B::intern(tables, from_b),
-            C::intern(tables, from_c),
-        )
-    }
-}
-
-impl<A, FromA, B, FromB, C, FromC, D, FromD> Intern<(FromA, FromB, FromC, FromD)> for (A, B, C, D)
-where
-    A: Intern<FromA>,
-    B: Intern<FromB>,
-    C: Intern<FromC>,
-    D: Intern<FromD>,
-{
-    fn intern(tables: &mut InternerTables, input: (FromA, FromB, FromC, FromD)) -> (A, B, C, D) {
-        let (from_a, from_b, from_c, from_d) = input;
-        (
-            A::intern(tables, from_a),
-            B::intern(tables, from_b),
-            C::intern(tables, from_c),
-            D::intern(tables, from_d),
-        )
-    }
-}
-
 trait PushInterned<E> {
-    fn push_interned<I>(&mut self, tables: &mut InternerTables, element: I)
-    where
-        E: Intern<I>;
+    fn push_interned(&mut self, tables: &mut InternerTables, element: impl InternTo<E>);
 }
 
 impl<E> PushInterned<E> for Vec<E> {
-    fn push_interned<I>(&mut self, tables: &mut InternerTables, element: I)
-    where
-        E: Intern<I>,
-    {
-        self.push(E::intern(tables, element));
+    fn push_interned(&mut self, tables: &mut InternerTables, element: impl InternTo<E>) {
+        self.push(InternTo::intern(tables, element));
     }
 }
 

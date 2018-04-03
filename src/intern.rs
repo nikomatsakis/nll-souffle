@@ -49,14 +49,14 @@ impl InternerTables {
     }
 }
 
-crate trait Intern<From: ?Sized> {
-    fn intern(tables: &mut InternerTables, input: From) -> Self;
+crate trait InternTo<To> {
+    fn intern(tables: &mut InternerTables, input: Self) -> To;
 }
 
 macro_rules! intern_impl {
     ($t: ident, $field: ident) => {
-        impl Intern<&str> for $t {
-            fn intern(tables: &mut InternerTables, input: &str) -> Self {
+        impl InternTo<$t> for &str {
+            fn intern(tables: &mut InternerTables, input: &str) -> $t {
                 tables.$field.intern(input)
             }
         }
@@ -66,3 +66,48 @@ macro_rules! intern_impl {
 intern_impl!(Region, regions);
 intern_impl!(Borrow, borrows);
 intern_impl!(Point, points);
+
+impl<A, FromA, B, FromB> InternTo<(A, B)> for (FromA, FromB)
+where
+    FromA: InternTo<A>,
+    FromB: InternTo<B>,
+{
+    fn intern(tables: &mut InternerTables, input: (FromA, FromB)) -> (A, B) {
+        let (from_a, from_b) = input;
+        (FromA::intern(tables, from_a), FromB::intern(tables, from_b))
+    }
+}
+
+impl<A, FromA, B, FromB, C, FromC> InternTo<(A, B, C)> for (FromA, FromB, FromC)
+where
+    FromA: InternTo<A>,
+    FromB: InternTo<B>,
+    FromC: InternTo<C>,
+{
+    fn intern(tables: &mut InternerTables, input: (FromA, FromB, FromC)) -> (A, B, C) {
+        let (from_a, from_b, from_c) = input;
+        (
+            FromA::intern(tables, from_a),
+            FromB::intern(tables, from_b),
+            FromC::intern(tables, from_c),
+        )
+    }
+}
+
+impl<A, FromA, B, FromB, C, FromC, D, FromD> InternTo<(A, B, C, D)> for (FromA, FromB, FromC, FromD)
+where
+    FromA: InternTo<A>,
+    FromB: InternTo<B>,
+    FromC: InternTo<C>,
+    FromD: InternTo<D>,
+{
+    fn intern(tables: &mut InternerTables, input: (FromA, FromB, FromC, FromD)) -> (A, B, C, D) {
+        let (from_a, from_b, from_c, from_d) = input;
+        (
+            FromA::intern(tables, from_a),
+            FromB::intern(tables, from_b),
+            FromC::intern(tables, from_c),
+            FromD::intern(tables, from_d),
+        )
+    }
+}
