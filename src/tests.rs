@@ -40,8 +40,7 @@ macro_rules! run_differential_dataflow {
 fn carry_nest() -> Result<(), Box<dyn Error>> {
     run_souffle! {
         in("carry-nest") expecting (
-            r#"borrowLiveAt
-===============
+            r#"===============
 "B_foo"	"B0/1"
 "B_foo"	"B0/2"
 "B_bar"	"B0/3"
@@ -75,8 +74,7 @@ borrow B_bar live at B0/3
 fn problem_case_1() -> Result<(), Box<dyn Error>> {
     run_souffle! {
         in("problem-case-1") expecting (
-            r#"borrowLiveAt
-===============
+            r#"===============
 "B0"	"B1/2"
 ===============
 "#
@@ -101,8 +99,7 @@ fn issue_47680() -> Result<(), Box<dyn Error>> {
     // Borrow is not live around loop.
     run_souffle! {
         in("issue-47680") expecting (
-            r#"borrowLiveAt
-===============
+            r#"===============
 "B_x"	"B/1"
 "B_x"	"C/0"
 "B_x"	"B/2"
