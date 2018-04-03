@@ -70,15 +70,6 @@ impl<E> PushInterned<E> for Vec<E> {
     }
 }
 
-struct AllFacts {
-    borrow_region: Vec<(Region, Borrow, Point)>,
-    next_statement: Vec<(Point, Point)>,
-    goto: Vec<(Point, Point)>,
-    region_live_on_entry: Vec<(Region, Point)>,
-    killed: Vec<(Borrow, Point)>,
-    outlives: Vec<(Point, Region, Region, Point)>,
-}
-
 // This basically recreates what is in regions.dl
 crate fn region_computation(input: &ir::Input) {
     let mut intern_tables = InternerTables::new();

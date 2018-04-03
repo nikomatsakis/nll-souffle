@@ -32,3 +32,12 @@ pub(crate) struct Point {
 }
 from_usize!(Point);
 
+crate struct AllFacts {
+    crate borrow_region: Vec<(Region, Borrow, Point)>,
+    crate next_statement: Vec<(Point, Point)>,
+    crate goto: Vec<(Point, Point)>,
+    crate region_live_on_entry: Vec<(Region, Point)>,
+    crate killed: Vec<(Borrow, Point)>,
+    crate outlives: Vec<(Point, Region, Region, Point)>,
+}
+
