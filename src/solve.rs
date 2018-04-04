@@ -4,6 +4,7 @@ use facts::*;
 use intern::{InternTo, InternerTables};
 use ir;
 use std::sync::{Arc, Mutex};
+use std::time::Instant;
 
 use timely::{self, dataflow::*};
 
@@ -22,8 +23,7 @@ impl<E> PushInterned<E> for Vec<E> {
 
 // This basically recreates what is in regions.dl
 crate fn region_computation(input: &ir::Input) {
-    let mut intern_tables = InternerTables::new();
-    let borrow_live_at_vec: Arc<Mutex<Vec<(Borrow, Point)>>> = Arc::new(Mutex::new(Vec::new()));
+    let mut intern_tables = &mut InternerTables::new();
 
     macro_rules! collect_facts {
         (
@@ -35,7 +35,7 @@ crate fn region_computation(input: &ir::Input) {
             {
                 let mut temp: Vec<($($arg_ty),*)> = vec![];
                 $input.$for_each_name(|$($arg_name : &str),*| {
-                    Ok::<(), !>(temp.push_interned(&mut $intern_tables, ($($arg_name),*)))
+                    Ok::<(), !>(temp.push_interned($intern_tables, ($($arg_name),*)))
                 }).unwrap();
                 temp
             }
@@ -86,7 +86,15 @@ crate fn region_computation(input: &ir::Input) {
         ),
     };
 
+    region_computation_from_facts(intern_tables, all_facts);
+}
+
+crate fn region_computation_from_facts(intern_tables: &mut InternerTables, all_facts: AllFacts) {
+    let instant = Instant::now();
+    let borrow_live_at_vec: Arc<Mutex<Vec<(Borrow, Point)>>> = Arc::new(Mutex::new(Vec::new()));
     push_timely_facts(all_facts, borrow_live_at_vec.clone());
+    let duration = instant.elapsed();
+    println!("duration: {}.{:09}s", duration.as_secs(), duration.subsec_nanos());
 
     println!("vvv borrowLiveAt vvv");
     let mut vector = borrow_live_at_vec.lock().unwrap().clone();
@@ -201,6 +209,7 @@ fn push_timely_facts(facts: AllFacts, borrow_live_at_vec: Arc<Mutex<Vec<(Borrow,
                         .map(|(r, b, p)| ((r, p), b))
                         .semijoin(&region_live_at)
                         .map(|((r, p), b)| (b, p))
+                        .distinct()
                         .inspect(move |&((b, p), _timestamp, _diff)| {
                             borrow_live_at_vec.lock().unwrap().push((b, p));
                         })

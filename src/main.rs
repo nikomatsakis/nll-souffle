@@ -21,6 +21,7 @@ mod intern;
 mod lower;
 mod parser;
 mod solve;
+mod tab_delim;
 mod tests;
 
 use std::env;
@@ -34,6 +35,14 @@ fn main() {
 
     let mut args = env::args().skip(1).peekable();
 
+    if args.peek().map_or(false, |arg| arg == "--execute-from-facts") {
+        args.next();
+        for input_dir in args {
+            execute_from_facts(&Path::new(&input_dir)).unwrap();
+        }
+        return;
+    }
+
     let mut execute_mode = false;
     if args.peek().map_or(false, |arg| arg == "--execute") {
         args.next();
@@ -42,7 +51,7 @@ fn main() {
 
     for input_file in args {
         let mut input_text = &mut String::new();
-        let result: Result<(), Box<Error>> = do catch {
+        let result: Result<(), Box<dyn Error>> = do catch {
             let mut file = File::open(&input_file)?;
             file.read_to_string(input_text)?;
             let ir = parser.parse(input_text)?;
@@ -63,20 +72,28 @@ fn main() {
     }
 }
 
+fn execute_from_facts(
+    facts_dir: &Path,
+) -> Result<(), Box<dyn Error>> {
+    let tables = &mut intern::InternerTables::new();
+    let all_facts = tab_delim::load_tab_delimited_facts(tables, facts_dir);
+    Ok(solve::region_computation_from_facts(tables, all_facts))
+}
+
 fn write_to(
     path: &Path,
-    output: impl FnOnce(&mut File) -> Result<(), Box<Error>>,
-) -> Result<(), Box<Error>> {
+    output: impl FnOnce(&mut File) -> Result<(), Box<dyn Error>>,
+) -> Result<(), Box<dyn Error>> {
     let mut file = File::create(path)?;
     output(&mut file)?;
     Ok(())
 }
 
-fn solve_facts(ir: &ir::Input) -> Result<(), Box<Error>> {
+fn solve_facts(ir: &ir::Input) -> Result<(), Box<dyn Error>> {
     Ok(solve::region_computation(ir))
 }
 
-fn dump_facts(input_file: &String, ir: &ir::Input) -> Result<(), Box<Error>> {
+fn dump_facts(input_file: &String, ir: &ir::Input) -> Result<(), Box<dyn Error>> {
     let path = PathBuf::from(input_file);
     let parent_path = match path.parent() {
         Some(p) => p.to_owned(),

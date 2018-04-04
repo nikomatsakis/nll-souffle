@@ -2,13 +2,13 @@ macro_rules! from_usize {
     ($t: ident) => {
         impl From<usize> for $t {
             fn from(index: usize) -> $t {
-                $t { index }
+                $t { index: index as u32 }
             }
         }
 
         impl Into<usize> for $t {
             fn into(self) -> usize {
-                self.index
+                self.index as usize
             }
         }
     };
@@ -16,19 +16,19 @@ macro_rules! from_usize {
 
 #[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Copy, Abomonation, Debug, Hash)]
 pub(crate) struct Region {
-    index: usize,
+    index: u32,
 }
 from_usize!(Region);
 
 #[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Copy, Abomonation, Debug, Hash)]
 pub(crate) struct Borrow {
-    index: usize,
+    index: u32,
 }
 from_usize!(Borrow);
 
 #[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Copy, Abomonation, Debug, Hash)]
 pub(crate) struct Point {
-    index: usize,
+    index: u32,
 }
 from_usize!(Point);
 
