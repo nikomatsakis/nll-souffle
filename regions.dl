@@ -85,6 +85,23 @@ restricts(R1, B, Q) :-
   regionLiveAt(R1, Q). // Region is live at the end of the statement
 
 ///////////////////////////////////////////////////////////////////////////
+// `pointsTo(R, B, P)`
+.decl pointsTo( r:region, b:borrow, p:point )
+.output pointsTo
+
+pointsTo(R, B, P) :-
+  borrowRegion(R, B, P).
+
+pointsTo(R1, B, Q) :-
+  outlives(P, R2, R1, Q),
+  pointsTo(R2, B, P).
+
+pointsTo(R1, B, Q) :-
+  pointsTo(R1, B, P),
+  cfgEdge(P, Q),
+  regionLiveAt(R1, Q).
+
+///////////////////////////////////////////////////////////////////////////
 .decl borrowLiveAt( b:borrow, p:point )
 .output borrowLiveAt
 

@@ -200,6 +200,43 @@ fn push_timely_facts(facts: AllFacts, borrow_live_at_vec: Arc<Mutex<Vec<(Borrow,
                         .distinct()
                 });
 
+                // .decl pointsTo( r:region, b:borrow, p:point )
+                let points_to = borrow_region.iterate(|points_to| {
+                    let borrow_region = borrow_region.enter(&points_to.scope());
+                    let outlives = outlives.enter(&points_to.scope());
+                    let next_statement = next_statement.enter(&points_to.scope());
+                    let cfg_edge = cfg_edge.enter(&points_to.scope());
+                    let region_live_at = region_live_at.enter(&points_to.scope());
+
+                    // pointsTo(R, B, P) :- borrowRegion(R, B, P).
+                    let points_to1 = borrow_region.clone();
+
+                    // pointsTo(R1, B, Q) :-
+                    //   pointsTo(R2, B, P)
+                    //   outlives(P, R2, R1, Q)
+                    let points_to2 = points_to
+                        .map(|(r2, b, p)| ((p, r2), b))
+                        .join(&outlives.map(|(p, r2, r1, q)| ((p, r2), (r1, q))))
+                        .map(|((p, r2), b, (r1, q))| (r1, b, q));
+
+                    // pointsTo(R1, B, Q) :-
+                    //   pointsTo(R1, B, P)
+                    //   cfgEdge(P, Q)
+                    //   regionLiveAt(R1, Q)
+                    let points_to3 = points_to
+                        .map(|(r1, b, p)| (p, (b, r1)))
+                        .join(&cfg_edge)
+                        .map(|(_p, (b, r1), q)| ((r1, q), b))
+                        .semijoin(&region_live_at)
+                        .map(|((r1, q), b)| (r1, b, q));
+
+                    points_to1
+                        .concat(&points_to2)
+                        .concat(&points_to3)
+                             .distinct()
+                             .inspect(|_| ())
+                });
+
                 // borrowLiveAt(B, P) :-
                 //   restricts(R, B, P)
                 //   regionLiveAt(R, P)
